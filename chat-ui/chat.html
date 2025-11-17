@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Guitar Bot Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --messenger-blue: #0084FF;
+            --messenger-gray: #E4E6EB;
+            --messenger-dark-gray: #65676B;
+            --messenger-light-gray: #F0F2F5;
+            --border-color: #ddd;
+            --shadow-color: rgba(0,0,0,0.1);
+            --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--messenger-light-gray);
+            overflow: hidden;
+        }
+
+        .chat-app-container {
+            width: 100%;
+            max-width: 700px;
+            height: 90vh;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .chat-header img.avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .chat-header p {
+            margin: 0;
+            font-size: 0.8em;
+            color: var(--messenger-dark-gray);
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto; /* Scrollable message area */
+            display: flex;
+            flex-direction: column; /* Stack messages vertically */
+            background-color: var(--messenger-light-gray); /* Messenger chat background */
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-end; /* Align avatar and bubble at bottom */
+            margin-bottom: 10px;
+            max-width: 80%; /* Don't let bubbles take full width */
+        }
+
+        .message-row.user {
+            margin-left: auto; /* Push user messages to the right */
+            flex-direction: row-reverse; /* Avatar on the right for user */
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 8px; /* Spacing between avatar and bubble */
+            flex-shrink: 0; /* Don't shrink avatar */
+        }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 18px; /* Messenger-like rounding */
+            max-width: 100%; /* Bubble itself can fill its row space */
+            word-wrap: break-word; /* Prevent long words from breaking layout */
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .message-row.bot .message-bubble {
+            background-color: var(--messenger-gray);
+            color: #000;
+            border-bottom-left-radius: 4px; /* Slightly less rounded on the bot's side near avatar */
+        }
+
+        .message-row.user .message-bubble {
+            background-color: var(--messenger-blue);
+            color: #fff;
+            border-bottom-right-radius: 4px; /* Slightly less rounded on the user's side near avatar */
+        }
+
+        .message-timestamp {
+            font-size: 0.7em;
+            color: var(--messenger-dark-gray);
+            margin-top: 2px;
+            text-align: center; /* Adjust as needed */
+            width: 100%;
+        }
+        .message-row.user .message-timestamp {
+            text-align: right;
+        }
+        .message-row.bot .message-timestamp {
+            text-align: left;
+        }
+
+        /* Input area */
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: #fff;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px; /* Rounded input field */
+            margin-right: 10px;
+            font-size: 0.95em;
+            outline: none;
+        }
+
+        .chat-input-area button {
+            background-color: transparent; /* No background for icon button */
+            border: none;
+            color: var(--messenger-blue);
+            font-size: 1.5em; /* Icon size */
+            cursor: pointer;
+            padding: 5px;
+            display: flex; /* For centering FontAwesome icon */
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease-in-out;
+        }
+        .chat-input-area button:hover {
+            color: #0056b3; /* Darker blue on hover */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chat-app-container {
+                width: 100%;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            body {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-app-container">
+        <div class="chat-header">
+            <img src="images/wahpuff-logox170.png" alt="Guitar Bot Avatar" class="avatar">
+            <div>
+                <h2>Guitar Bot</h2>
+                <p>Online</p>
+            </div>
+        </div>
+
+        <div class="messages-container" id="messages-container">
+            </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Escribe tu mensaje...">
+            <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+<script>
+    const API_URL = "http://localhost:8000/api/v1/lead"; // FastAPI API 
+    const messagesContainer = document.getElementById('messages-container');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    const userAvatar = 'images/oscar.jpg';
+    const botAvatar = 'images/bot.png';
+
+    // session_id 
+    const SESSION_ID = crypto.randomUUID();
+    let current_phase = "";
+
+    function addMessage(message, sender, timestamp, avatarUrl) {
+        const messageRow = document.createElement('div');
+        messageRow.classList.add('message-row', sender);
+
+        if (avatarUrl) {
+            const avatarImg = document.createElement('img');
+            avatarImg.src = avatarUrl;
+            avatarImg.alt = sender + ' avatar';
+            avatarImg.classList.add('message-avatar');
+            messageRow.appendChild(avatarImg);
+        }
+
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+
+        const messageBubble = document.createElement('div');
+        messageBubble.classList.add('message-bubble');
+        messageBubble.textContent = message;
+        messageContent.appendChild(messageBubble);
+
+        const timestampElement = document.createElement('div');
+        timestampElement.classList.add('message-timestamp');
+        timestampElement.textContent = timestamp || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        messageContent.appendChild(timestampElement);
+
+        messageRow.appendChild(messageContent);
+        messagesContainer.appendChild(messageRow);
+
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendToAPI(userMessage) {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: SESSION_ID,
+                message: userMessage
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (message === '') return;
+
+        addMessage(message, 'user', null, userAvatar);
+        userInput.value = '';
+
+        try {
+            // Indicador de "escribiendo"
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('message-row', 'bot', 'typing-indicator');
+            typingIndicator.innerHTML = `<img src="${botAvatar}" class="message-avatar"><div class="message-bubble"><span>...</span></div>`;
+            messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            const data = await sendToAPI(message);
+
+            // Quitar indicador
+            messagesContainer.removeChild(typingIndicator);
+
+            // Mostrar respuesta del bot
+            addMessage(data.response, 'bot', null, botAvatar);
+            current_phase = data.phase;
+
+            // Si terminó y hay agendamiento
+            if (current_phase === "closed" && data.data && data.data.agendamiento) {
+                addMessage("📝 Datos de agendamiento: " + JSON.stringify(data.data.agendamiento), 'bot', null, botAvatar);
+            }
+        } catch (error) {
+            console.error(error);
+            addMessage("⚠️ Error de conexión con el bot", 'bot', null, botAvatar);
+        }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    // --- Iniciar conversación (mensaje vacío como en el bash script) ---
+    (async function initConversation() {
+        try {
+            const data = await sendToAPI("");
+            addMessage(data.response, 'bot', null, botAvatar);
+            current_phase = data.phase;
+        } catch (err) {
+            addMessage("⚠️ No se pudo iniciar la conversación. ¿Está corriendo el API?", 'bot', null, botAvatar);
+        }
+    })();
+</script>
+
+
+</body>
+</html>
